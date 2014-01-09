@@ -23,16 +23,16 @@ class Application(Frame):
     def create_tiles(self):
         for i in range(0, self.height):
             for j in range(0, self.width):
-                button = Button(self, image=blank)
-                button.bind("<Button-1>", self.handle_left_click)
-                button.bind("<Button-3>", self.handle_right_click)
-                button.grid(row=i, column=j)
-                button.row = i
-                button.column = j
-                button.blank = True
-                button.flag = False
-                button.contents = 0
-                self.tiles.append(button)
+                tile = Button(self, image=blank)
+                tile.bind("<Button-1>", self.handle_left_click)
+                tile.bind("<Button-3>", self.handle_right_click)
+                tile.grid(row=i, column=j)
+                tile.row = i
+                tile.column = j
+                tile.blank = True
+                tile.flag = False
+                tile.contents = 0
+                self.tiles.append(tile)
 
 
     #Assigns mines to certain tiles on a random basis. Number of mines
@@ -219,6 +219,9 @@ class Application(Frame):
 #                   Global Methods                 #
 ####################################################
 
+def exit():
+    root.destroy()
+
 def play_easy():
     global app
     app.destroy()
@@ -242,11 +245,22 @@ def play_difficult():
     app.mainloop()
 
 
+
+####################################################
+#               Initializing the GUI               #
+####################################################
+
 root = Tk()
 root.title('Minesweeper')
 
 #Create menu.
 menubar = Menu(root)
+
+filemenu = Menu(menubar, tearoff=0)
+filemenu.add_command(label="Exit", command=exit)
+menubar.add_cascade(label="File", menu=filemenu)
+root.config(menu=menubar)
+
 playmenu = Menu(menubar, tearoff=0)
 playmenu.add_command(label="Easy", command=play_easy)
 playmenu.add_command(label="Medium", command=play_medium)
