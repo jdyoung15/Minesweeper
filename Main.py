@@ -3,12 +3,11 @@ import random
 
 
 class Application(Frame):
-    """The Frame displaying the grid of tiles. """
+    """The Frame displaying the grid of tiles."""
 
     def __init__(self, width, height, mine_count, master):
-        """Initializes the Frame.
+        """Initializes the Frame."""
 
-        """
         Frame.__init__(self, master)
         self.master = master
         self.width = width
@@ -184,9 +183,8 @@ class Application(Frame):
 
 
     def find_neighbors(self, r, c):
-        """Returns all tiles neighboring the tile at position (r, c).
+        """Returns all tiles neighboring the tile at position (r, c)."""
 
-        """
         neighbors = []
 
         n_coord = [ [r-1, c-1], [r-1, c], [r-1, c+1], [r, c+1], \
@@ -277,9 +275,8 @@ def play_medium():
     app.mainloop()
 
 def play_difficult():
-    """Starts a new game with a 16 row x 30 column tile grid, and 99 mines.
+    """Starts a new game with a 16 x 30 tile grid, and 99 mines."""
 
-    """
     global app
     app.destroy()
     app = Application(30, 16, 99, root)
