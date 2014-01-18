@@ -3,14 +3,12 @@ import random
 
 
 class Application(Frame):
-"""The Frame displaying the grid of tiles. 
-
-"""
+    """The Frame displaying the grid of tiles. """
 
     def __init__(self, width, height, mine_count, master):
-    """Initializes the Frame.
+        """Initializes the Frame.
 
-    """
+        """
         Frame.__init__(self, master)
         self.master = master
         self.width = width
@@ -25,9 +23,10 @@ class Application(Frame):
 
 
     def create_tiles(self):
-    """Creates the grid of tiles, with dimensions self.height x self.width. 
+        """Creates the grid of tiles, with dimensions self.height x 
+        self.width. 
 
-    """
+        """
         for i in range(0, self.height):
             for j in range(0, self.width):
                 tile = Button(self, image=blank)
@@ -43,10 +42,10 @@ class Application(Frame):
 
 
     def create_tile_mines(self):
-    """Assigns mines to certain tiles on a random basis. Number of mines
-    determined by self.mine_count.
+        """Assigns mines to certain tiles on a random basis. Number of mines
+        determined by self.mine_count.
 
-    """
+        """
         num_mines = self.mine_count
         while num_mines > 0:
             mine_tile = random.choice(self.tiles)
@@ -57,11 +56,12 @@ class Application(Frame):
              
 
     def create_tile_nums(self):
-    """Determines the number of mines neighboring each tile. This number
-    is what will appear when the blank tile is uncovered (clicked). If a 
-    tile has no neighboring mines, the uncovered tile will simply be blank.
+        """Determines the number of mines neighboring each tile. This number
+        is what will appear when the blank tile is uncovered (clicked). If
+        a tile has no neighboring mines, the uncovered tile will simply be
+        blank.
 
-    """
+        """
         for tile in self.tiles:
             if tile.contents != 10:
                 count_mines = 0
@@ -73,22 +73,22 @@ class Application(Frame):
 
 
     def handle_left_click(self, event):
-    """Called when a tile is clicked with the left mouse button. The tile
-    in question is obtained by calling event.widget and is passed on to
-    self.filter.
+        """Called when a tile is clicked with the left mouse button. The
+        tile in question is obtained by calling event.widget and is passed
+        on to self.filter.
 
-    """
+        """
         self.filter(event.widget)
         if self.check_win():
             self.win_game()
 
 
     def handle_right_click(self, event):
-    """Called when a tile is clicked with the right mouse button.
-    Determines which tile was selected from EVENT and marks that tile
-    with a flag if previously blank or blank if previously flagged.
+        """Called when a tile is clicked with the right mouse button.
+        Determines which tile was selected from EVENT and marks that tile
+        with a flag if previously blank or blank if previously flagged.
 
-    """
+        """
         tile = event.widget
         if tile.flag == True:
             tile["image"] = blank
@@ -99,11 +99,12 @@ class Application(Frame):
 
 
     def handle_double_click(self, event):
-    """Called when player double-clicks a tile, which in this game serves
-    to uncover all neighboring non-mine squares at once if the player has 
-    in fact properly indentified and flagged all neighboring mines.
+        """Called when player double-clicks a tile, which in this game
+        serves to uncover all neighboring non-mine squares at once if the
+        player has in fact properly indentified and flagged all neighboring
+        mines.
 
-    """
+        """
         tile = event.widget
         neighbors = self.find_neighbors(tile.row, tile.column)
         count_flags = 0
@@ -134,11 +135,11 @@ class Application(Frame):
 
 
     def filter(self, tile):
-    """Determines how TILE should be dealt with based on its type (whether
-    it contains a mine, has no neighboring mines, or has at least one
-    mine).
+        """Determines how TILE should be dealt with based on its type
+        (whether it contains a mine, has no neighboring mines, or has at 
+        least one mine).
 
-    """
+        """
         r = tile.row
         c = tile.column
 
@@ -163,11 +164,11 @@ class Application(Frame):
 
 
     def change_tile(self, tile, img):
-    """Changes TILE so that it now displays the provided image IMG. For  
-    example, this would be used to change a blank tile to a tile
-    displaying the number of neighboring mines.
+        """Changes TILE so that it now displays the provided image IMG. 
+        For example, this would be used to change a blank tile to a tile
+        displaying the number of neighboring mines.
 
-    """
+        """
         r = tile.row
         c = tile.column
         new_tile = Label(self, image=img)
@@ -183,9 +184,9 @@ class Application(Frame):
 
 
     def find_neighbors(self, r, c):
-    """Returns all tiles neighboring the tile at position (r, c).
+        """Returns all tiles neighboring the tile at position (r, c).
 
-    """
+        """
         neighbors = []
 
         n_coord = [ [r-1, c-1], [r-1, c], [r-1, c+1], [r, c+1], \
@@ -199,10 +200,10 @@ class Application(Frame):
         
 
     def check_win(self):
-    """Checks if the game has been won. This will be the case when the
-    number of blank tiles is equal to the number of mines. 
+        """Checks if the game has been won. This will be the case when the
+        number of blank tiles is equal to the number of mines. 
 
-    """
+        """
         count = 0
         for tile in self.tiles:
             if tile.blank:
@@ -211,22 +212,22 @@ class Application(Frame):
 
 
     def win_game(self):
-    """Called when the game is won. Flags all mine tiles (if the player had
-    not done so already) and renders all remainig blank tiles immutable
-    and non-interactive (unclickeable).
+        """Called when the game is won. Flags all mine tiles (if the player 
+        had not done so already) and renders all remainig blank tiles 
+        immutable and non-interactive (unclickeable).
 
-    """
+        """
         for i in range(0, len(self.tiles)):
             tile = self.tiles[i]
             if tile.blank and tile.contents == 10:
                 self.change_tile(tile, flag)
 
     def lose_game(self, mine_tiles):
-    """Called when the game is lost. Reveals the location of all mines and
-    renders all remaining blank tiles immutable and non-interactive
-    (unclickeable).
+        """Called when the game is lost. Reveals the location of all mines 
+        and renders all remaining blank tiles immutable and non-interactive
+        (unclickeable).
 
-    """
+        """
         for i in range(len(self.tiles)):
             tile = self.tiles[i]
             if tile.contents == 10:
@@ -239,10 +240,10 @@ class Application(Frame):
 
 
     def convert(self, row, col):
-    """Given the position (ROW, COL) of a tile in the grid, finds tile's 
-    corresponding position in self.tiles.
+        """Given the position (ROW, COL) of a tile in the grid, finds 
+        tile's corresponding position in self.tiles.
 
-    """
+        """
         return self.width*row+col
 
 
@@ -252,15 +253,13 @@ class Application(Frame):
 ####################################################
 
 def exit():
-"""Closes the application.
+    """Closes the application."""
 
-"""
     root.destroy()
 
 def play_easy():
-"""Starts a new game with a 9 x 9 tile grid and 10 mines.
+    """Starts a new game with a 9 x 9 tile grid and 10 mines."""
 
-"""
     global app
     app.destroy()
     app = Application(9, 9, 10, root)
@@ -269,9 +268,8 @@ def play_easy():
 
 
 def play_medium():
-"""Starts a new game with a 16 x 16 tile grid and 40 mines.
+    """Starts a new game with a 16 x 16 tile grid and 40 mines."""
 
-"""
     global app
     app.destroy()
     app = Application(16, 16, 40, root)
@@ -279,9 +277,9 @@ def play_medium():
     app.mainloop()
 
 def play_difficult():
-"""Starts a new game with a 16 row x 30 column tile grid, and 99 mines.
+    """Starts a new game with a 16 row x 30 column tile grid, and 99 mines.
 
-"""
+    """
     global app
     app.destroy()
     app = Application(30, 16, 99, root)
