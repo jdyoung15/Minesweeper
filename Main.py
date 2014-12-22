@@ -5,20 +5,17 @@ import random
 class Application(Frame):
     """The Frame displaying the grid of tiles."""
 
-    def __init__(self, width, height, mine_count, master):
+    def __init__(self, height, width, mine_count, master):
         """Initializes the Frame."""
 
         Frame.__init__(self, master)
-        self.master = master
-        self.width = width
         self.height = height
+        self.width = width
         self.mine_count = mine_count 
+        self.MINE_VALUE = -1
         self.numbers = [one, two, three, four, five, six, seven, eight]
         self.tiles = []
-        self.mines = []
         self.create_tiles()
-        self.create_tile_mines()
-        self.create_tile_nums()
 
 
     def create_tiles(self):
@@ -26,82 +23,58 @@ class Application(Frame):
         self.width. 
 
         """
-        for i in range(0, self.height):
-            for j in range(0, self.width):
+        # Create blank tiles.
+        for r in range(0, self.height):
+            for c in range(0, self.width):
                 tile = Button(self, image=blank)
                 tile.bind("<Button-1>", self.handle_left_click)
                 tile.bind("<Button-3>", self.handle_right_click)
-                tile.grid(row=i, column=j)
-                tile.row = i
-                tile.column = j
+                tile.grid(row=r, column=c)
+                tile.row = r
+                tile.column = c
                 tile.blank = True
                 tile.flag = False
-                tile.contents = 0
+                tile.value = 0
                 self.tiles.append(tile)
 
-
-    def create_tile_mines(self):
-        """Assigns mines to certain tiles on a random basis. Number of mines
-        determined by self.mine_count.
-
-        """
+        # Randomly assign mines to tiles.
         num_mines = self.mine_count
         while num_mines > 0:
-            mine_tile = random.choice(self.tiles)
-            if mine_tile.contents != 10: 
-                mine_tile.contents = 10
-                self.mines.append(mine_tile)
-                num_mines -= 1
+            tile = random.choice(self.tiles)
+            if self.is_mine(tile): 
+                # Selected tile is already a mine. Skip.
+                continue
+
+            tile.value = self.MINE_VALUE
+            num_mines -= 1
+
+            # Update values of neighboring tiles.
+            for n in self.find_neighbors(tile.row, tile.column):
+                if not self.is_mine(n): 
+                    n.value += 1
              
 
-    def create_tile_nums(self):
-        """Determines the number of mines neighboring each tile. This number
-        is what will appear when the blank tile is uncovered (clicked). If
-        a tile has no neighboring mines, the uncovered tile will simply be
-        blank.
-
-        """
-        for tile in self.tiles:
-            if tile.contents != 10:
-                count_mines = 0
-                neighbors = self.find_neighbors(tile.row, tile.column)
-                for n in neighbors:
-                    if n.contents == 10:
-                        count_mines += 1
-                tile.contents = count_mines
-
-
     def handle_left_click(self, event):
-        """Called when a tile is clicked with the left mouse button. The
-        tile in question is obtained by calling event.widget and is passed
-        on to self.filter.
-
-        """
-        self.filter(event.widget)
-        if self.check_win():
-            self.win_game()
+        """Called when a tile is clicked with the left mouse button."""
+        self.reveal(event.widget)
 
 
     def handle_right_click(self, event):
-        """Called when a tile is clicked with the right mouse button.
-        Determines which tile was selected from EVENT and marks that tile
+        """Called when a tile is clicked with the right mouse button. Marks tile
         with a flag if previously blank or blank if previously flagged.
 
         """
         tile = event.widget
-        if tile.flag == True:
+        if tile.flag:
             tile["image"] = blank
-            tile.flag = False
         else:
             tile["image"] = flag 
-            tile.flag = True
+        tile.flag = not tile.flag
 
 
     def handle_double_click(self, event):
-        """Called when player double-clicks a tile, which in this game
-        serves to uncover all neighboring non-mine squares at once if the
-        player has in fact properly indentified and flagged all neighboring
-        mines.
+        """Called when player double-clicks a numbered tile. Uncovers all 
+        neighboring non-mine squares.
 
         """
         tile = event.widget
@@ -111,14 +84,14 @@ class Application(Frame):
             if n.blank == True and n.flag == True:
                 count_flags += 1
 
-        #Double-click is a valid move
-        if count_flags == tile.contents:
+        # Double-click is only valid if tile's value equals number of flagged
+        # neighboring tiles.
+        if count_flags == tile.value:
             lost = []
             for n in neighbors:
-                position = self.convert(n.row, n.column)
-                if n.contents == 10 and not n.flag:
+                if self.is_mine(n) and not n.flag:
                     lost.append(n)
-                elif n.contents != 10 and n.blank and n.flag:
+                elif not self.is_mine(n) and n.blank and n.flag:
                     self.change_tile(n, wrong)
     
             if len(lost) > 0:
@@ -126,48 +99,39 @@ class Application(Frame):
                 return
 
             for n in neighbors:
-                if n.blank and n.contents != 10:
-                    self.filter(n)
+                if n.blank and not self.is_mine(n):
+                    self.reveal(n)
+
+
+    def reveal(self, tile):
+        """Determines how TILE should be dealt with based on whether it contains
+        a mine, has no neighboring mines, or has at least one neighboring mine.
+
+        """
+        # Check if mine tile.
+        if self.is_mine(tile):
+            self.lose_game([tile])
+
+        # Check if empty tile.
+        elif tile.value == 0:
+            self.change_tile(tile, empty)
+            tile["state"] = DISABLED
+            for n in self.find_neighbors(tile.row, tile.column):
+                if n.blank:
+                    self.reveal(n)
+
+        # Numbered tile.
+        else:
+            self.change_tile(tile, self.numbers[tile.value - 1])
+            tile["state"] = DISABLED
 
         if self.check_win():
             self.win_game()
 
 
-    def filter(self, tile):
-        """Determines how TILE should be dealt with based on its type
-        (whether it contains a mine, has no neighboring mines, or has at 
-        least one mine).
-
-        """
-        r = tile.row
-        c = tile.column
-
-        #Tile contains a mine. (Here I'm designating mine tiles as having
-        #tile.contents values of 10.)
-        if tile.contents == 10:
-            self.lose_game([tile])
-
-        #Tile has no neighboring mines.
-        elif tile.contents == 0:
-            self.change_tile(tile, empty)
-            tile["state"] = DISABLED
-            neighbors = self.find_neighbors(r, c)
-            for n in neighbors:
-                if n.blank:
-                    self.filter(n)
-
-        #Tile has at least one neighboring mine.
-        else:
-            self.change_tile(tile, self.numbers[tile.contents - 1])
-            tile["state"] = DISABLED
-
-
     def change_tile(self, tile, img):
-        """Changes TILE so that it now displays the provided image IMG. 
-        For example, this would be used to change a blank tile to a tile
-        displaying the number of neighboring mines.
+        """Changes TILE to display new image IMG."""
 
-        """
         r = tile.row
         c = tile.column
         new_tile = Label(self, image=img)
@@ -176,23 +140,23 @@ class Application(Frame):
         new_tile.blank = False
         new_tile.grid(row=r, column=c)
         new_tile["relief"] = SUNKEN
-        if tile.contents != 10:
+        if not self.is_mine(tile):
             new_tile.bind("<Double-Button-1>", self.handle_double_click)
-            new_tile.contents = tile.contents
-        self.tiles[self.convert(r, c)] = new_tile
+            new_tile.value = tile.value
+        self.tiles[self.width*r+c] = new_tile
 
 
     def find_neighbors(self, r, c):
-        """Returns all tiles neighboring the tile at position (r, c)."""
+        """Returns all tiles neighboring the tile at row r and column c."""
+
+        nbr_coord = [ [r-1, c-1], [r-1, c], [r-1, c+1], [r, c+1], \
+                      [r+1, c+1], [r+1, c], [r+1, c-1], [r, c-1]  ]  
 
         neighbors = []
-
-        n_coord = [ [r-1, c-1], [r-1, c], [r-1, c+1], [r, c+1], \
-                    [r+1, c+1], [r+1, c], [r+1, c-1], [r, c-1]  ]  
-
-        for r,c in n_coord:
+        for r,c in nbr_coord:
+            # Check if r and c are within table boundaries.
             if r >= 0 and r < self.height and c >= 0 and c < self.width: 
-                neighbors.append(self.tiles[self.convert(r, c)])
+                neighbors.append(self.tiles[self.width*r+c])
 
         return neighbors
         
@@ -210,39 +174,32 @@ class Application(Frame):
 
 
     def win_game(self):
-        """Called when the game is won. Flags all mine tiles (if the player 
-        had not done so already) and renders all remainig blank tiles 
-        immutable and non-interactive (unclickeable).
+        """Called when the game is won. Flags all mine tiles, if the player 
+        had not done so already.
 
         """
-        for i in range(0, len(self.tiles)):
-            tile = self.tiles[i]
-            if tile.blank and tile.contents == 10:
+        for tile in self.tiles:
+            if tile.blank and self.is_mine(tile):
                 self.change_tile(tile, flag)
 
-    def lose_game(self, mine_tiles):
-        """Called when the game is lost. Reveals the location of all mines 
-        and renders all remaining blank tiles immutable and non-interactive
-        (unclickeable).
 
-        """
-        for i in range(len(self.tiles)):
-            tile = self.tiles[i]
-            if tile.contents == 10:
+    def lose_game(self, mine_tiles):
+        """Called when the game is lost. Reveals the location of all mines."""
+
+        for tile in self.tiles:
+            if self.is_mine(tile):
                 self.change_tile(tile, mine)
             elif tile.blank:
                 self.change_tile(tile, blank)
 
-        for i in range(len(mine_tiles)):
-            self.change_tile(mine_tiles[i], explode)
+        for mine_tile in mine_tiles:
+            self.change_tile(mine_tile, explode)
 
 
-    def convert(self, row, col):
-        """Given the position (ROW, COL) of a tile in the grid, finds 
-        tile's corresponding position in self.tiles.
+    def is_mine(self, tile):
+        """Returns true if TILE is a mine, false otherwise."""
 
-        """
-        return self.width*row+col
+        return tile.value == self.MINE_VALUE
 
 
 
@@ -255,33 +212,33 @@ def exit():
 
     root.destroy()
 
-def play_easy():
-    """Starts a new game with a 9 x 9 tile grid and 10 mines."""
+
+def play(height, width, num_mines):
+    """Starts a new game with the specified height, width, and number of mines."""
 
     global app
     app.destroy()
-    app = Application(9, 9, 10, root)
+    app = Application(height, width, num_mines, root)
     app.pack(side=BOTTOM)
     app.mainloop()
+
+
+def play_easy():
+    """Starts a new game with a 9 x 9 tile grid and 10 mines."""
+
+    play(9, 9, 10)
 
 
 def play_medium():
     """Starts a new game with a 16 x 16 tile grid and 40 mines."""
 
-    global app
-    app.destroy()
-    app = Application(16, 16, 40, root)
-    app.pack(side=BOTTOM)
-    app.mainloop()
+    play(16, 16, 40)
+
 
 def play_difficult():
     """Starts a new game with a 16 x 30 tile grid, and 99 mines."""
 
-    global app
-    app.destroy()
-    app = Application(30, 16, 99, root)
-    app.pack(side=BOTTOM)
-    app.mainloop()
+    play(16, 30, 99)
 
 
 
@@ -324,7 +281,7 @@ six = PhotoImage(file="images/six.gif", width=20, height=20)
 seven = PhotoImage(file="images/seven.gif", width=20, height=20)
 eight = PhotoImage(file="images/eight.gif", width=20, height=20)
 
-app = Application(30, 16, 99, root)
+app = Application(9, 9, 10, root)
 app.pack(side=BOTTOM)
 app.mainloop()
 root.mainloop()
