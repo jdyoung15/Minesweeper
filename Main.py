@@ -13,7 +13,6 @@ class Application(Frame):
         self.width = width
         self.mine_count = mine_count 
         self.MINE_VALUE = -1
-        self.numbers = [one, two, three, four, five, six, seven, eight]
         self.tiles = []
         self.create_tiles()
 
@@ -122,7 +121,7 @@ class Application(Frame):
 
         # Numbered tile.
         else:
-            self.change_tile(tile, self.numbers[tile.value - 1])
+            self.change_tile(tile, numbers[tile.value - 1])
             tile["state"] = DISABLED
 
         if self.check_win():
@@ -272,14 +271,8 @@ mine = PhotoImage(file="images/mine.gif", width=20, height=20)
 explode = PhotoImage(file="images/explode.gif", width=20, height=20)
 wrong = PhotoImage(file="images/wrong.gif", width=20, height=20)
 flag = PhotoImage(file="images/flag.gif", width=20, height=20)
-one = PhotoImage(file="images/one.gif", width=20, height=20)
-two = PhotoImage(file="images/two.gif", width=20, height=20)
-three = PhotoImage(file="images/three.gif", width=20, height=20)
-four = PhotoImage(file="images/four.gif", width=20, height=20)
-five = PhotoImage(file="images/five.gif", width=20, height=20)
-six = PhotoImage(file="images/six.gif", width=20, height=20)
-seven = PhotoImage(file="images/seven.gif", width=20, height=20)
-eight = PhotoImage(file="images/eight.gif", width=20, height=20)
+numbers = [PhotoImage(file="images/number-%d.gif" % i, width=20, height=20) 
+           for i in range(1, 8)]
 
 app = Application(9, 9, 10, root)
 app.pack(side=BOTTOM)
